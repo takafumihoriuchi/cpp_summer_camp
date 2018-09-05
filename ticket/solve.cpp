@@ -1,24 +1,33 @@
 #include <iostream>
 #include <thread>
+#include <vector>
+#include <mutex>
+using namespace std;
+
+mutex mut;
 
 class keisan {
 	int counta;
 	int suuzi[4];
 	int n; // target-number
-	std::string enzan;  //式表示用
 	double sisoku(int mode, double a, double b);
 public:
 	static int count;
 	keisan(int n_, int a, int b, int c, int d);
 	void dousyutu(int i, int j, int k, int l);
-	void countsyori() { if (counta > 0) this->count++;}
+	void countsyori() {
+		if (counta > 0) {
+			mut.lock();
+			this->count++;
+			mut.unlock();
+		}
+	}
 };
 
 keisan::keisan(int n_, int a, int b, int c, int d)
 {
 	this->n = n_;
 	this->counta = 0;
-	this->enzan = "+-*/";
 	this->suuzi[0] = a;
 	this->suuzi[1] = b;
 	this->suuzi[2] = c;
@@ -64,7 +73,43 @@ int keisan::count;
 int tenpuzzle(int n)
 {
 	keisan::count = 0;
-	// loop "abcd" as "[0-9][0-9][0-9][0-9]"
+
+	vector<thread> vecThreads_a(10);
+
+	for (int a=0; a<10; a++) {
+		vecThreads_a[a] = thread([=] {
+
+		for (int b=0; b<10; b++) {
+			for (int c=0; c<10; c++) {
+				for (int d=0; d<10; d++) {
+					// i:計算順序 j,k,l:四則演算選択
+					keisan retu = keisan(n, a, b, c, d);
+					for (int i=0; i<5; i++) {
+						for (int j=0; j<4; j++) {
+							for (int k=0; k<4; k++) {
+								for (int l=0; l<4; l++) {
+									retu.dousyutu(i, j, k, l);
+								}
+							}
+						}
+					}
+					retu.countsyori(); // this number-sequence is valid
+				}
+			}
+		}
+
+		});
+	}
+
+	for (int t=0; t<10; t++) {
+		vecThreads_a[t].join();
+	}
+
+	return keisan::count;
+}
+
+/*
+// loop "abcd" as "[0-9][0-9][0-9][0-9]"
 	for (int a=0; a<10; a++) {
 		for (int b=0; b<10; b++) {
 			for (int c=0; c<10; c++) {
@@ -86,4 +131,4 @@ int tenpuzzle(int n)
 		}
 	}
 	return keisan::count;
-}
+*/
