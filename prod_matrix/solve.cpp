@@ -4,58 +4,36 @@
 using namespace std;
 typedef vector<vector<long long>> Matrix;
 
-
-void partial_calc(Matrix A, Matrix B, Matrix &C, int y, int x)
-{
-  int sum = 0;
-  int k;
-  for (k=0; k<A.size(); k++) {
-    sum += A[k][y] * B[x][k];
-  }
-  C[x][y] = sum;
-  return;
-}
-
 void product(Matrix& A, Matrix& B, Matrix& C)
 {
-	int thread_n = A.front().size();
-	vector<thread> vecThreads(thread_n);
+	int n_row = A.front().size();
+    int n_col = B.size();
+	vector<thread> vecThreads_row(n_row);
+    vector<thread> vecThreads_col(n_col);
 
-	for (int y=0; y<thread_n; y++) {
-        vecThreads[y] = 
+	for (int y=0; y<n_row; y++) {
+        vecThreads_row[y] = thread([=, &C] {
+            
+            
+            for (int x=0; x<n_col; x++) {
+                vecThreads_col[x] = thread([=, &C] {
+                    int sum = 0;
+                    int num_elem = A.size();
+                    for (int k=0; k<num_elem; k++)
+                        sum += A[k][y] * B[x][k];
+                    C[x][y] = sum;
+                });
+            }
 
-		for (int x=0; x<B.size(); x++) {
-			int idx = y*B.size()+x;
-			vecThreads[idx] = thread([=, &C] {
-				partial_calc(A, B, C, y, x);
-			});
-		}
 
+        });
 	}
 
-	for (int i=0; i<thread_n; i++) {
-		vecThreads[i].join();
+	for (int i=0; i<n_row; i++) {
+		vecThreads_row[i].join();
 	}
-
-}
-
-
-/*
-#include <vector>
-
-using namespace std;
-typedef vector<vector<long long>> Matrix;
-
-// AB = C 
-void product(Matrix& A, Matrix& B, Matrix& C){
-  for (int x=0; x<B.size(); x++){
-    for (int y=0; y<A.front().size(); y++){
-      int sum=0;
-      for (int k=0; k<A.size(); k++){
-        sum += A[k][y]*B[x][k];
-      }
-      C[x][y] = sum;
+    for (int i=0; i<n_col; i++) {
+        vecThreads_col[i].join();
     }
-  }
+
 }
-*/
