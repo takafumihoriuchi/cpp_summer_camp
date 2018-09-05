@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <algorithm>
 #include "clock.h"
 
 using namespace std;
@@ -10,12 +11,12 @@ void quicksort_(vector<int> &a, int l, int r) {
     int p = a[(l+r)/2];
     int i = l-1, j = r+1;
     while (1) {
-      thread t1([&]{while (a[++i] < p);});
-      thread t2([&]{while (a[--j] < p);});
-      // while (a[++i] < p);
-      // while (a[--j] > p);
-      t1.join();
-      t2.join();
+      // thread t([&]{while (a[++i] < p);});
+      // thread s([&]{while (a[--j] > p);});
+      while (a[++i] < p);
+      while (a[--j] > p);
+      // t.join();
+      // s.join();
       if (i >= j) break;
       swap(a[i], a[j]);
     }
@@ -28,11 +29,9 @@ void quicksort_(vector<int> &a, int l, int r) {
   }
 }
 void quicksort(vector<int> &a) {
-  // thread t1(quicksort_, ref(a), 0, (a.size()-1)/2);
-  // thread t2(quicksort_, ref(a), (a.size()-1)/2+1, a.size()-1);
-  // int x = a.size()-1;
-  // thread t1(quicksort_, ref(a), 0, a.size()-1);
-  // t1.join();
-  // t2.join();
-  quicksort_(a, 0, a.size()-1);
+  thread t1(quicksort_, ref(a), 0, (a.size()-1)/2);
+  thread t2(quicksort_, ref(a), (a.size()-1)/2+1, a.size()-1);
+  t1.join();
+  t2.join();
+  inplace_merge(a.begin(), a.begin()+(a.size()-1)/2+1, a.end());
 }
