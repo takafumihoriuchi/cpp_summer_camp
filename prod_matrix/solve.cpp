@@ -6,6 +6,46 @@ typedef vector<vector<long long>> Matrix;
 
 void product(Matrix& A, Matrix& B, Matrix& C)
 {
+    int n_row = A.front().size();
+    int n_col = B.size();
+
+
+    thread t1 = thread([=, &C] {
+
+        for (int y=0; y<n_row/2; y++) {
+            for (int x=0; x<n_col; x++) {
+                int sum = 0;
+                int num_elem = A.size();
+                for (int k=0; k<num_elem; k++)
+                    sum += A[k][y] * B[x][k];
+                C[x][y] = sum;
+            }
+        }
+
+    });
+
+    thread t2 = thread([=, &C] {
+
+        for (int y=n_row/2; y<n_row; y++) {
+            for (int x=0; x<n_col; x++) {
+                int sum = 0;
+                int num_elem = A.size();
+                for (int k=0; k<num_elem; k++)
+                    sum += A[k][y] * B[x][k];
+                C[x][y] = sum;
+            }
+        }
+
+    });
+
+    t1.join();
+    t2.join();
+
+}
+
+/*
+void product(Matrix& A, Matrix& B, Matrix& C)
+{
 	int n_row = A.front().size();
     int n_col = B.size();
 	vector<thread> vecThreads_row(n_row);
@@ -37,3 +77,4 @@ void product(Matrix& A, Matrix& B, Matrix& C)
 	}
 
 }
+*/
