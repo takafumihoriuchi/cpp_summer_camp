@@ -18,11 +18,12 @@ void partial_calc(Matrix A, Matrix B, Matrix &C, int y, int x)
 
 void product(Matrix& A, Matrix& B, Matrix& C)
 {
-	int thread_n = B.size() * A.front().size();
+	int thread_n = A.front().size();
 	vector<thread> vecThreads(thread_n);
 
-	for (int y=0; y<A.front().size(); y++) {
-		
+	for (int y=0; y<thread_n; y++) {
+        vecThreads[y] = 
+
 		for (int x=0; x<B.size(); x++) {
 			int idx = y*B.size()+x;
 			vecThreads[idx] = thread([=, &C] {
