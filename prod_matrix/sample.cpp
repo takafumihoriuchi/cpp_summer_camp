@@ -16,14 +16,18 @@ void partial_calc(Matrix A, Matrix B, Matrix &C, int y, int x)
   return;
 }
 
+void call_row_thread()
+{
+
+}
 
 void product(Matrix& A, Matrix& B, Matrix& C)
 {
 	int thread_n = B.size() * A.front().size();
 	vector<thread> vecThreads(thread_n);
 
-	for (int y=0; y<A.front().size(); y++){
-		for (int x=0; x<B.size(); x++){   
+	for (int y=0; y<A.front().size(); y++) {
+		for (int x=0; x<B.size(); x++) {
 			int idx = y*B.size()+x;
 			vecThreads[idx] = thread([=, &C] {
 				partial_calc(A, B, C, y, x);
@@ -36,3 +40,24 @@ void product(Matrix& A, Matrix& B, Matrix& C)
 	}
 
 }
+
+
+/*
+#include <vector>
+
+using namespace std;
+typedef vector<vector<long long>> Matrix;
+
+// AB = C 
+void product(Matrix& A, Matrix& B, Matrix& C){
+  for (int x=0; x<B.size(); x++){
+    for (int y=0; y<A.front().size(); y++){
+      int sum=0;
+      for (int k=0; k<A.size(); k++){
+        sum += A[k][y]*B[x][k];
+      }
+      C[x][y] = sum;
+    }
+  }
+}
+*/
