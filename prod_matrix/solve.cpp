@@ -24,6 +24,9 @@ void product(Matrix& A, Matrix& B, Matrix& C)
                     C[x][y] = sum;
                 });
             }
+            for (int i=0; i<n_col; i++) {
+                vecThreads_col[i].join();
+            }
 
 
         });
@@ -32,8 +35,5 @@ void product(Matrix& A, Matrix& B, Matrix& C)
 	for (int i=0; i<n_row; i++) {
 		vecThreads_row[i].join();
 	}
-    for (int i=0; i<n_col; i++) {
-        vecThreads_col[i].join();
-    }
 
 }
