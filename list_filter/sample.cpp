@@ -1,34 +1,37 @@
 #include <list>
 #include <thread>
+#include <iostream>
 using namespace std;
+
 
 list<int> filter(bool (*func) (int), list<int> l)
 {
 	int l_size = l.size();
 	int l_half = l_size / 2;
-
+	list<int> l_f;
+	list<int> l_b;
 	thread t_front([&] {
 		int count = 0;
 		list<int>::iterator p = l.begin();
 		while (count < l_half) {
-			if(!func(*p)) p = l.erase(p);
-			else p++;
-			count++;
+		  if(*p%17==0) l_f.push_back(*p);
+		  p++;
+		  count++;
 		}
 	});
-
+	
 	// use main_thread to process from back
 	int count = l_half;
 	list<int>::reverse_iterator p = l.rbegin();
 	while (count < l_size) {
-		if(!func(*p)) l.erase((++p).base());
-		else p++;
-		count++;
+	  if(*p%17==0) l_b.push_front(*p);
+	  p++;
+	  count++;
 	}
 
 	t_front.join();
-
-	return l;
+	l_f.splice(l_f.end(), l_b);
+	return l_f;
 }
 
 /*

@@ -39,6 +39,7 @@ void quicksort_(vector<int> &a, int l, int r) {
     quicksort_(a, j+1, r);
   }
 }
+
 void quicksort(vector<int> &a) {
   int len = a.size()-1;
 
