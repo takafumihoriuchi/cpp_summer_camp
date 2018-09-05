@@ -9,72 +9,43 @@ void product(Matrix& A, Matrix& B, Matrix& C)
     int n_row = A.front().size();
     int n_col = B.size();
 
+    int num_threads = 8;
+    int rows_per_thread = n_row / num_threads;
 
-    thread t1 = thread([=, &C] {
-
-        for (int y=0; y<n_row/2; y++) {
-            for (int x=0; x<n_col; x++) {
-                int sum = 0;
-                int num_elem = A.size();
-                for (int k=0; k<num_elem; k++)
-                    sum += A[k][y] * B[x][k];
-                C[x][y] = sum;
-            }
-        }
-
-    });
-
-    thread t2 = thread([=, &C] {
-
-        for (int y=n_row/2; y<n_row; y++) {
-            for (int x=0; x<n_col; x++) {
-                int sum = 0;
-                int num_elem = A.size();
-                for (int k=0; k<num_elem; k++)
-                    sum += A[k][y] * B[x][k];
-                C[x][y] = sum;
-            }
-        }
-
-    });
-
-    t1.join();
-    t2.join();
-
-}
-
-/*
-void product(Matrix& A, Matrix& B, Matrix& C)
-{
-	int n_row = A.front().size();
-    int n_col = B.size();
-	vector<thread> vecThreads_row(n_row);
-    vector<thread> vecThreads_col(n_col);
-
-	for (int y=0; y<n_row; y++) {
-        vecThreads_row[y] = thread([=, &C] {
-            
-            
-            for (int x=0; x<n_col; x++) {
-                vecThreads_col[x] = thread([=, &C] {
+    vector<thread> vecThreads(num_threads-1);
+    for (int i=0; i<(num_threads-1); i++) {
+        vecThreads[i] = thread([=, &C] {
+            int begin_row = rows_per_thread * i;
+            int end_row = rows_per_thread * (i+1);
+            for (int y=begin_row; y<end_row; y++) {
+                for (int x=0; x<n_col; x++) {
                     int sum = 0;
                     int num_elem = A.size();
                     for (int k=0; k<num_elem; k++)
                         sum += A[k][y] * B[x][k];
                     C[x][y] = sum;
-                });
+                }
             }
-            for (int i=0; i<n_col; i++) {
-                vecThreads_col[i].join();
-            }
-
-
         });
-	}
+    }
 
-	for (int i=0; i<n_row; i++) {
-		vecThreads_row[i].join();
-	}
+    // process the last batch of rows with main_thread
+    int i = num_threads - 1;
+    int begin_row = rows_per_thread * i;
+    int end_row = n_row;
+    for (int y=begin_row; y<end_row; y++) {
+        for (int x=0; x<n_col; x++) {
+            int sum = 0;
+            int num_elem = A.size();
+            for (int k=0; k<num_elem; k++)
+                sum += A[k][y] * B[x][k];
+            C[x][y] = sum;
+        }
+    }
 
+    for (int i=0; i<(num_threads-1); i++) {
+        vecThreads[i].join();
+    }
+
+    return;
 }
-*/
