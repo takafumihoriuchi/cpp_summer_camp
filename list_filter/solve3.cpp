@@ -23,7 +23,7 @@ void delete_p_from_adrlist(list<list<int>::iterator> &adr_list, list<int>::itera
 	}
 }
 
-list<int> filter(bool (*func) (int), list<int> l)
+void filter(bool (*func) (int), list<int> &l)
 {
 	mutex mut_init;
 	mutex mut_1;
@@ -88,5 +88,4 @@ list<int> filter(bool (*func) (int), list<int> l)
 	for (int i=0; i<num_thread; i++) {
 		vecThreads[i].join();
 	}
-	return l;
 }
