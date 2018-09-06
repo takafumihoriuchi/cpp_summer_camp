@@ -1,34 +1,55 @@
 #include <list>
 #include <vector>
 #include <thread>
-#include <mutex>
+#include <algorithm>
 using namespace std;
 
-mutex mut;
+#define NUM_THREADS 7
 
 list<int> filter(bool (*func) (int), list<int> l)
 {
-	int num_threads = 7;
-	vector<thread> vecThreads(num_threads);
-	for (int i=0; i<num_threads; i++) {
-		list<int>::iterator p = l.begin();
-		p += i;
-		vecThreads[i] = thread([=, &l] {
+	vector<thread> vecThreads(NUM_THREADS);
+	vector<list<int>::iterator> vecAddress;
+
+	for (int i=0; i<NUM_THREADS; i++) {
+		list<int>::iterator init_p = l.begin();
+		for (int j=0; j<i; j++) init_p++; // p += i;
+		vecAddress.push_back(init_p);
+		
+		vecThreads[i] = thread([=, &l, &vecAddress] {
+			list<int>::iterator p = init_p;
+			list<int>::iterator p_tmp;
+			// int idx;
 			try {
 				while (1) {
+					p_tmp = p;
 					if (*p%17!=0) {
-						mut.lock();
-						p = l.erase(p);
-						mut.unlock();
-					} else p++;
-					if (p!=l.end()) break;
+						l.erase(p);
+						p_tmp++;
+						if (find(vecAddress.begin(), vecAddress.end(), p_tmp) != vecAddress.end()) {
+							continue; // when containing // 出直してこい的な感じ
+						} else {
+							vecAddress.erase(remove(vecAddress.begin(), vecAddress.end(), p), vecAddress.end());
+							p++; // when not containing
+						}
+					} else {
+						p_tmp++;
+						if (find(vecAddress.begin(), vecAddress.end(), p_tmp) != vecAddress.end()) {
+							continue; // when containing // 出直してこい的な感じ
+						} else {
+							vecAddress.erase(remove(vecAddress.begin(), vecAddress.end(), p), vecAddress.end());
+							p++; // when not containing
+						}
+					}
+					if (p==l.end()) break;
 				}
 			} catch (...) {
-				// do nothing and terminate thread
+				// some error??
 			}
         });
+
 	}
-	for (int i=0; i<num_threads; i++) {
+	for (int i=0; i<NUM_THREADS; i++) {
 		vecThreads[i].join();
 	}
 
