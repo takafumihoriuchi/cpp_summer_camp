@@ -2,7 +2,11 @@
 #include <vector>
 #include <thread>
 #include <algorithm>
+#include <mutex>
 using namespace std;
+
+mutex mut;
+mutex mut_addel;
 
 #define NUM_THREADS 7
 
@@ -10,41 +14,48 @@ list<int> filter(bool (*func) (int), list<int> l)
 {
 	vector<thread> vecThreads(NUM_THREADS);
 	vector<list<int>::iterator> vecAddress;
+	// vector<> vecInitp(NUM_THREADS);
 
 	for (int i=0; i<NUM_THREADS; i++) {
 		list<int>::iterator init_p = l.begin();
 		for (int j=0; j<i; j++) init_p++; // p += i;
 		vecAddress.push_back(init_p);
+	}
+	for (int i=0; i<NUM_THREADS; i++) {
 		
 		vecThreads[i] = thread([=, &l, &vecAddress] {
 			list<int>::iterator p = init_p;
 			list<int>::iterator p_tmp;
-			// int idx;
-			try {
-				while (1) {
-					p_tmp = p;
-					if (*p%17!=0) {
-						l.erase(p);
-						p_tmp++;
-						if (find(vecAddress.begin(), vecAddress.end(), p_tmp) != vecAddress.end()) {
-							continue; // when containing // 出直してこい的な感じ
-						} else {
-							vecAddress.erase(remove(vecAddress.begin(), vecAddress.end(), p), vecAddress.end());
-							p++; // when not containing
-						}
-					} else {
-						p_tmp++;
-						if (find(vecAddress.begin(), vecAddress.end(), p_tmp) != vecAddress.end()) {
-							continue; // when containing // 出直してこい的な感じ
-						} else {
-							vecAddress.erase(remove(vecAddress.begin(), vecAddress.end(), p), vecAddress.end());
-							p++; // when not containing
-						}
+
+			while (1) {
+				p_tmp = p;
+				if (*p%17!=0) {
+					l.erase(p);
+					for (int j=0; j<i+1; j++) p_tmp++; // p_tmp += i; // p_tmp++;
+					while (find(vecAddress.begin(), vecAddress.end(), p_tmp) != vecAddress.end()) {
+						// when containing // wait
 					}
-					if (p==l.end()) break;
+					mut_addel.lock();
+						vecAddress.erase(remove(vecAddress.begin(), vecAddress.end(), p), vecAddress.end());
+					mut_addel.unlock();
+					mut.lock();
+						for (int j=0; j<i+1; j++) p++; // p += i; // p++; // when not containing
+						vecAddress.push_back(p);
+					mut.unlock();
+				} else {
+					for (int j=0; j<i+1; j++) p_tmp++; // p_tmp += i; // p_tmp++;
+					while (find(vecAddress.begin(), vecAddress.end(), p_tmp) != vecAddress.end()) {
+						// when containing // wait
+					}
+					mut_addel.lock();
+						vecAddress.erase(remove(vecAddress.begin(), vecAddress.end(), p), vecAddress.end());
+					mut_addel.unlock();
+					mut.lock();
+						for (int j=0; j<i+1; j++) p++; // p += i; // p++; // when not containing
+						vecAddress.push_back(p);
+					mut.unlock();
 				}
-			} catch (...) {
-				// some error??
+				if (p == l.end()) break;
 			}
         });
 
